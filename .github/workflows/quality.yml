@@ -1,0 +1,76 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  quality-check:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint with annotations
+        run: npm run lint
+        continue-on-error: true
+
+      - name: TypeScript type checking
+        run: npx tsc --noEmit --pretty
+        continue-on-error: true
+
+      - name: Check package vulnerabilities
+        run: npm audit --audit-level moderate
+        continue-on-error: true
+
+      - name: Check for outdated packages
+        run: npm outdated
+        continue-on-error: true
+
+      - name: Bundle size analysis
+        run: |
+          npm run build
+          npx @next/bundle-analyzer --no-open
+        env:
+          DATABASE_URL: file:./build-check.db
+          NEXTAUTH_SECRET: build-check-secret
+          NEXTAUTH_URL: http://localhost:3000
+        continue-on-error: true
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security audit
+        run: npm audit --audit-level high
+
+      - name: Check for known vulnerabilities
+        run: |
+          npx audit-ci --config .audit-ci.json || echo "Security issues found - review required"
+        continue-on-error: true
