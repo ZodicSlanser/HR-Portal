@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@prisma/client';
 import { hash } from "bcryptjs";
 
 // For seeding, use regular PrismaClient (uses directUrl automatically)
@@ -835,8 +835,7 @@ async function main() {
   console.log("📧 admin@company.com / password: admin123 (HR Admin access)");
   console.log("📧 manager@company.com / password: manager123 (Project Manager access)");
   
-  console.log("\n✅ Comprehensive demo data seeded successfully!");
-  console.log("🚀 Ready for Vercel deployment with rich, realistic business data!");
+  console.log("\n✅ Comprehensive demo data seeded successfully!");  console.log("🚀 Ready for Vercel deployment with rich, realistic business data!");
 }
 
 main()
