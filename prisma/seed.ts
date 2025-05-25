@@ -829,11 +829,10 @@ async function main() {
   console.log("• Technical Development: Website, Mobile App, API Platform, E-commerce");
   console.log("• Internal Systems: HR Management, Customer Support, BI Dashboard");
   console.log("• Business Growth: Marketing Campaign, Sales initiatives");
-  
-  console.log("\n🔐 Demo Login Credentials:");
-  console.log("📧 demo@blurr.so / password: password123 (General access)");
+    console.log("\n🔐 Demo Login Credentials:");
+  console.log("📧 demo@blurr.so / password: demo123 (General access)");
   console.log("📧 admin@company.com / password: admin123 (HR Admin access)");
-  console.log("📧 manager@company.com / password: password123 (Project Manager access)");
+  console.log("📧 manager@company.com / password: manager123 (Project Manager access)");
   
   console.log("\n✅ Comprehensive demo data seeded successfully!");
   console.log("🚀 Ready for Vercel deployment with rich, realistic business data!");
