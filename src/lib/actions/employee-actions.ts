@@ -27,8 +27,10 @@ export async function createEmployee(formData: FormData): Promise<ActionResponse
     
     await prisma.employee.create({
       data: {
-        ...validatedData,
+        name: validatedData.name,
+        employeeId: validatedData.employeeId,
         joiningDate: new Date(validatedData.joiningDate),
+        basicSalary: validatedData.basicSalary,
         userId,
       },
     });
@@ -55,8 +57,10 @@ export async function updateEmployee(id: string, formData: FormData): Promise<Ac
     await prisma.employee.update({
       where: { id, userId },
       data: {
-        ...validatedData,
+        name: validatedData.name,
+        employeeId: validatedData.employeeId,
         joiningDate: new Date(validatedData.joiningDate),
+        basicSalary: validatedData.basicSalary,
       },
     });
 

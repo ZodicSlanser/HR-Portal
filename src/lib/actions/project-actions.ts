@@ -23,7 +23,8 @@ export async function createProject(formData: FormData): Promise<ActionResponse>
     
     await prisma.project.create({
       data: {
-        ...validatedData,
+        name: validatedData.name,
+        description: validatedData.description,
         userId,
       },
     });
