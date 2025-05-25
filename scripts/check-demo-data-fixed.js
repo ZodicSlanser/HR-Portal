@@ -34,10 +34,8 @@ async function checkDemoData() {
   } else {
     console.log('✅ Database appears to contain data');
   }
-
   // Try to import and use Prisma client
-  try {
-    const { PrismaClient } = require('@prisma/client');
+  try {    const { PrismaClient } = require('@prisma/client');
     const prisma = new PrismaClient();
 
     // Check if tables exist and have data

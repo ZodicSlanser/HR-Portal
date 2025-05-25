@@ -10,6 +10,7 @@
 const { PrismaClient } = require('@prisma/client');
 
 async function setupProductionDatabase() {
+  // Use regular PrismaClient for setup operations (uses DIRECT_URL)
   const prisma = new PrismaClient();
   
   try {

@@ -3,8 +3,7 @@ console.log('Database file exists:', require('fs').existsSync('prisma/dev.db'));
 console.log('File size:', require('fs').statSync('prisma/dev.db').size, 'bytes');
 
 async function testConnection() {
-  try {
-    const { PrismaClient } = require('@prisma/client');
+  try {    const { PrismaClient } = require('@prisma/client');
     const prisma = new PrismaClient();
     
     const userCount = await prisma.user.count();

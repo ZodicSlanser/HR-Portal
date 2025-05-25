@@ -1,6 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client'
 import { hash } from "bcryptjs";
 
+// For seeding, use regular PrismaClient (uses directUrl automatically)
 const prisma = new PrismaClient();
 
 async function main() {
