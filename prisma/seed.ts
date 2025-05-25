@@ -6,18 +6,19 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("Starting enhanced seed...");
   
-  // Create multiple demo users
-  const hashedPassword = await hash("password123", 12);
+  // Create multiple demo users with correct passwords
+  const demoPassword = await hash("demo123", 12);
   const adminPassword = await hash("admin123", 12);
+  const managerPassword = await hash("manager123", 12);
   
   const users = await Promise.all([
     prisma.user.upsert({
       where: { email: "demo@blurr.so" },
-      update: { password: hashedPassword },
+      update: { password: demoPassword },
       create: {
         email: "demo@blurr.so",
         name: "Demo User",
-        password: hashedPassword,
+        password: demoPassword,
       },
     }),
     prisma.user.upsert({
@@ -31,11 +32,11 @@ async function main() {
     }),
     prisma.user.upsert({
       where: { email: "manager@company.com" },
-      update: { password: hashedPassword },
+      update: { password: managerPassword },
       create: {
         email: "manager@company.com",
         name: "Project Manager",
-        password: hashedPassword,
+        password: managerPassword,
       },
     }),
   ]);
