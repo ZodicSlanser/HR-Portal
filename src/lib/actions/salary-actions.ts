@@ -49,9 +49,12 @@ export async function createOrUpdateSalaryRecord(formData: FormData): Promise<Ac
         basicSalary: employee.basicSalary,
         bonus: validatedData.bonus,
         deduction: validatedData.deduction,
-      },
-      create: {
-        ...validatedData,
+      },      create: {
+        employeeId: validatedData.employeeId,
+        month: validatedData.month,
+        year: validatedData.year,
+        bonus: validatedData.bonus,
+        deduction: validatedData.deduction,
         basicSalary: employee.basicSalary,
       },
     });

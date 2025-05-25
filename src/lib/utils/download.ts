@@ -1,4 +1,4 @@
-import { getSalaryDataForExport } from "@/lib/actions/salary-actions";
+import { getSalaryDataForExport, type SalaryExportData } from "@/lib/actions/salary-actions";
 
 export async function downloadSalaryData(format: 'csv' | 'json' = 'csv') {
   try {
@@ -28,7 +28,7 @@ export async function downloadSalaryData(format: 'csv' | 'json' = 'csv') {
       
       const csvRows = [
         headers.join(','),
-        ...data.map(record => [
+        ...data.map((record: SalaryExportData) => [
           `"${record.employeeName}"`,
           `"${record.employeeId}"`,
           `"${record.period}"`,

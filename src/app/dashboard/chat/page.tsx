@@ -3,6 +3,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { prisma } from "@/lib/prisma";
 import { MessageCircle, Users, Briefcase, DollarSign, CheckSquare } from "lucide-react";
 import ChatInterface from "@/components/chat-interface";
+import { Employee } from "@/lib/types/salary-types";
+
+interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  tasks: Array<{
+    id: string;
+    status: string;
+  }>;
+}
 
 export default async function ChatPage() {
   const session = await auth();
@@ -41,36 +52,31 @@ export default async function ChatPage() {
   if (!user) {
     return <div>User not found.</div>;
   }
-
   // Prepare context data for the AI
   const contextData = {
-    employees: user.employees.map(emp => ({
+    employees: user.employees.map((emp: Employee) => ({
       id: emp.id,
       name: emp.name,
       employeeId: emp.employeeId,
       joiningDate: emp.joiningDate,
-      basicSalary: emp.basicSalary,
-      latestSalary: emp.salaryRecords[0] ? {
+      basicSalary: emp.basicSalary,      latestSalary: emp.salaryRecords?.[0] ? {
         month: emp.salaryRecords[0].month,
         year: emp.salaryRecords[0].year,
         bonus: emp.salaryRecords[0].bonus,
         deduction: emp.salaryRecords[0].deduction,
         total: emp.salaryRecords[0].basicSalary + emp.salaryRecords[0].bonus - emp.salaryRecords[0].deduction,
       } : null,
-    })),
-    projects: user.projects.map(proj => ({
+    })),    projects: user.projects.map((proj: Project) => ({
       id: proj.id,
       name: proj.name,
       description: proj.description,
       taskCount: proj.tasks.length,
       completedTasks: proj.tasks.filter(t => t.status === "DONE").length,
       inProgressTasks: proj.tasks.filter(t => t.status === "IN_PROGRESS").length,
-    })),
-    summary: {
+    })),    summary: {
       totalEmployees: user.employees.length,
-      totalProjects: user.projects.length,
-      totalTasks: user.projects.reduce((sum, p) => sum + p.tasks.length, 0),
-      completedTasks: user.projects.reduce((sum, p) => sum + p.tasks.filter(t => t.status === "DONE").length, 0),
+      totalProjects: user.projects.length,      totalTasks: user.projects.reduce((sum: number, p: Project) => sum + p.tasks.length, 0),
+      completedTasks: user.projects.reduce((sum: number, p: Project) => sum + p.tasks.filter(t => t.status === "DONE").length, 0),
     },
   };
 
@@ -126,10 +132,8 @@ export default async function ChatPage() {
             <CardTitle className="text-sm font-medium">Avg. Salary</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${contextData.employees.length > 0 ? 
-                Math.round(contextData.employees.reduce((sum, emp) => sum + emp.basicSalary, 0) / contextData.employees.length).toLocaleString() : 
+          <CardContent>            <div className="text-2xl font-bold">            ${contextData.employees.length > 0 ? 
+                Math.round(contextData.employees.reduce((sum: number, emp: Employee) => sum + emp.basicSalary, 0) / contextData.employees.length).toLocaleString() : 
                 0
               }
             </div>

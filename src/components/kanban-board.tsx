@@ -339,12 +339,11 @@ export default function KanbanBoard({ tasks, projects = [], employees = [] }: Re
     acc[column.id] = filteredTasks.filter(task => task.status === column.id);
     return acc;
   }, {} as Record<TaskStatus, Task[]>);
-
   // Get current project info
-  const currentProject = projects.find(p => p.id === selectedProjectId);
-  const projectTaskCounts = projects.map(project => ({
+  const currentProject = projects.find((p: Project) => p.id === selectedProjectId);
+  const projectTaskCounts = projects.map((project: Project) => ({
     ...project,
-    taskCount: tasks.filter(task => task.project.id === project.id).length
+    taskCount: tasks.filter((task: Task) => task.project.id === project.id).length
   }));
 
   function handleDragStart(event: DragStartEvent) {

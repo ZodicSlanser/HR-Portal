@@ -8,6 +8,7 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import EmployeeForm from "@/components/employee-form";
 import DeleteEmployeeButton from "@/components/delete-employee-button";
 import { format } from "date-fns";
+import {Employee} from "@/lib/types/salary-types";
 
 export default async function EmployeesPage() {
   const session = await auth();
@@ -69,7 +70,7 @@ export default async function EmployeesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {user.employees.map((employee) => (
+                {user.employees.map((employee: Employee) => (
                   <TableRow key={employee.id}>
                     <TableCell className="font-medium">
                       <Badge variant="outline">{employee.employeeId}</Badge>

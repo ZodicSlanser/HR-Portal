@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
-import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
+    // Dynamic import to avoid build-time issues
+    const { prisma } = await import("@/lib/prisma");
+    
     console.log("Registration endpoint called");
     
     const body = await req.json();

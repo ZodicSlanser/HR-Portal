@@ -34,9 +34,14 @@ export async function createTask(formData: FormData): Promise<ActionResponse> {
     
     if (!project) {
       return createErrorResponse("Project not found");
-    }
-      await prisma.task.create({
-      data: validatedData,
+    }    await prisma.task.create({
+      data: {
+        title: validatedData.title,
+        description: validatedData.description,
+        priority: validatedData.priority,
+        projectId: validatedData.projectId,
+        status: "TODO"
+      },
     });
 
     revalidatePath("/dashboard/projects");

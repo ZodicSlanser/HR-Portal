@@ -118,8 +118,8 @@ export default function SalaryForm({ employees, children }: Readonly<SalaryFormP
       setIsLoading(false);
     }
   }
-
-  function handleEmployeeChange(employeeId: string) {    const employee = employees.find(emp => emp.id === employeeId);
+  function handleEmployeeChange(employeeId: string) {    
+    const employee = employees.find((emp: Employee) => emp.id === employeeId);
     setSelectedEmployee(employee ?? null);
   }
 

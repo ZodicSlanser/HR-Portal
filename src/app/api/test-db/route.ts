@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
+    // Dynamic import to avoid build-time issues
+    const { prisma } = await import("@/lib/prisma");
+    
     console.log("Database test endpoint called");
     
     // Test database connection

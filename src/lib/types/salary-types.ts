@@ -7,6 +7,7 @@ export interface Employee {
   id: string;
   name: string;
   employeeId: string;
+  joiningDate: Date;
   basicSalary: number;
   salaryRecords?: BaseSalaryRecord[];
 }

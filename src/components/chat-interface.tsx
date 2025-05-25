@@ -58,17 +58,16 @@ function generateResponse(question: string, contextData: ContextData): string {
   if (lowerQuestion.includes("employee") || lowerQuestion.includes("staff") || lowerQuestion.includes("worker")) {
     if (lowerQuestion.includes("how many") || lowerQuestion.includes("count")) {
       return `You currently have ${contextData.summary.totalEmployees} employees in your organization.`;
-    }
-    if (lowerQuestion.includes("list") || lowerQuestion.includes("who")) {
-      const employeeList = contextData.employees.map(emp => 
+    }    if (lowerQuestion.includes("list") || lowerQuestion.includes("who")) {
+      const employeeList = contextData.employees.map((emp: ContextData['employees'][0]) => 
         `${emp.name} (ID: ${emp.employeeId})`
       ).join(", ");
       return `Here are your employees: ${employeeList}`;
     }
     if (lowerQuestion.includes("salary") || lowerQuestion.includes("pay")) {
       const avgSalary = contextData.employees.length > 0 ? 
-        Math.round(contextData.employees.reduce((sum, emp) => sum + emp.basicSalary, 0) / contextData.employees.length) : 0;
-      return `The average salary across all employees is $${avgSalary.toLocaleString()}. Individual salaries range from $${Math.min(...contextData.employees.map(e => e.basicSalary)).toLocaleString()} to $${Math.max(...contextData.employees.map(e => e.basicSalary)).toLocaleString()}.`;
+        Math.round(contextData.employees.reduce((sum: number, emp: ContextData['employees'][0]) => sum + emp.basicSalary, 0) / contextData.employees.length) : 0;
+      return `The average salary across all employees is $${avgSalary.toLocaleString()}. Individual salaries range from $${Math.min(...contextData.employees.map((e: ContextData['employees'][0]) => e.basicSalary)).toLocaleString()} to $${Math.max(...contextData.employees.map((e: ContextData['employees'][0]) => e.basicSalary)).toLocaleString()}.`;
     }
   }
   
@@ -76,9 +75,8 @@ function generateResponse(question: string, contextData: ContextData): string {
   if (lowerQuestion.includes("project")) {
     if (lowerQuestion.includes("how many") || lowerQuestion.includes("count")) {
       return `You have ${contextData.summary.totalProjects} active projects with a total of ${contextData.summary.totalTasks} tasks.`;
-    }
-    if (lowerQuestion.includes("list") || lowerQuestion.includes("what")) {
-      const projectList = contextData.projects.map(proj => 
+    }    if (lowerQuestion.includes("list") || lowerQuestion.includes("what")) {
+      const projectList = contextData.projects.map((proj: ContextData['projects'][0]) => 
         `${proj.name} (${proj.completedTasks}/${proj.taskCount} tasks completed)`
       ).join(", ");
       return `Here are your projects: ${projectList}`;
@@ -106,12 +104,11 @@ function generateResponse(question: string, contextData: ContextData): string {
   if (lowerQuestion.includes("summary") || lowerQuestion.includes("overview") || lowerQuestion.includes("status")) {
     return `Here's your HR overview: You have ${contextData.summary.totalEmployees} employees working on ${contextData.summary.totalProjects} projects. There are ${contextData.summary.totalTasks} total tasks with ${contextData.summary.completedTasks} completed (${Math.round((contextData.summary.completedTasks / contextData.summary.totalTasks) * 100)}% completion rate).`;
   }
-  
-  // Specific employee queries
-  const employeeNames = contextData.employees.map(emp => emp.name.toLowerCase());
-  const mentionedEmployee = employeeNames.find(name => lowerQuestion.includes(name));
+    // Specific employee queries
+  const employeeNames = contextData.employees.map((emp: ContextData['employees'][0]) => emp.name.toLowerCase());
+  const mentionedEmployee = employeeNames.find((name: string) => lowerQuestion.includes(name));
   if (mentionedEmployee) {
-    const employee = contextData.employees.find(emp => emp.name.toLowerCase() === mentionedEmployee);
+    const employee = contextData.employees.find((emp: ContextData['employees'][0]) => emp.name.toLowerCase() === mentionedEmployee);
     if (employee) {
       const joiningDate = new Date(employee.joiningDate).toLocaleDateString();
       let response = `${employee.name} (ID: ${employee.employeeId}) joined on ${joiningDate} with a basic salary of $${employee.basicSalary.toLocaleString()}.`;

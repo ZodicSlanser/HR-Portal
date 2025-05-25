@@ -10,7 +10,7 @@ import { SalaryTable } from "@/components/salary/salary-table";
 import { SalaryCards } from "@/components/salary/salary-cards";
 import { EditSalaryDialog } from "@/components/salary/edit-salary-dialog";
 import { EmptyState } from "@/components/salary/empty-state";
-import type { Employee, SalaryRecord, ViewMode, SortField, SortOrder } from "@/lib/types/salary-types";
+import type { Employee, SalaryRecord, ViewMode, SortField, SortOrder, BaseSalaryRecord } from "@/lib/types/salary-types";
 
 interface User {
   id: string;
@@ -33,11 +33,10 @@ export function SalaryManagementClient({ user }: SalaryManagementClientProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
-  // Get all salary records for filtering and display
+  const currentYear = new Date().getFullYear();  // Get all salary records for filtering and display
   const allSalaryRecords = useMemo(() => {
-    return user.employees.flatMap(employee => 
-      (employee.salaryRecords || []).map(record => ({
+    return user.employees.flatMap((employee: Employee) => 
+      (employee.salaryRecords || []).map((record: BaseSalaryRecord) => ({
         ...record,
         employee,
         totalPaid: record.basicSalary + record.bonus - record.deduction
@@ -133,11 +132,10 @@ export function SalaryManagementClient({ user }: SalaryManagementClientProps) {
 
     return filtered;
   }, [allSalaryRecords, searchTerm, selectedMonth, selectedYear, sortField, sortOrder]);
-
   // Get available years
   const availableYears = useMemo(() => {
-    const years = new Set(allSalaryRecords.map(record => record.year));
-    return Array.from(years).sort((a, b) => b - a);
+    const years = new Set(allSalaryRecords.map((record: SalaryRecord) => record.year));
+    return Array.from(years).sort((a: number, b: number) => b - a);
   }, [allSalaryRecords]);
 
   const handleEditRecord = (record: SalaryRecord) => {

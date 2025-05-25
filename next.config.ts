@@ -5,6 +5,20 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
+
+  // Webpack configuration
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Don't bundle Prisma on the client side
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        "fs": false,
+        "path": false,
+        "crypto": false,
+      };
+    }
+    return config;
+  },
   
   // Image optimization
   images: {
@@ -16,9 +30,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-
   // Vercel deployment optimizations
-  output: 'standalone',
+  // output: 'standalone', // Remove this for Vercel - causes routes-manifest issues
   
   // Bundle analysis (uncomment for bundle size analysis)
   // bundlePagesRouterDependencies: true,
