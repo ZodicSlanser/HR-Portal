@@ -1,7 +1,8 @@
 {
   "name": "tech-assessment",
   "version": "0.1.0",
-  "private": true,  "scripts": {
+  "private": true,
+  "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
@@ -11,7 +12,7 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "db:check": "node scripts/check-demo-data.js",
-    "vercel-build": "prisma generate && prisma migrate deploy && prisma db seed && next build",
+    "vercel-build": "prisma generate && prisma db push && prisma db seed && next build",
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
