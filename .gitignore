@@ -62,3 +62,17 @@ Thumbs.db
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Turbopack cache
+.turbo/
+.turbopack/
+
+# Environment files (Turbopack specific)
+.env.turbo
+
+# Turbopack cache and files
+.turbo/
+.turbopack/
+*.turbo
+.turbo-cache/
+.env.turbo.local

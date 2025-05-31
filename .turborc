@@ -1,0 +1,23 @@
+# Turbopack configuration file
+# This file configures various Turbopack settings for optimal performance
+
+# Enable experimental features
+experimental_features = true
+
+# Memory limit (in MB) - adjust based on your system
+memory_limit = 4096
+
+# Cache directory
+cache_dir = ".turbo"
+
+# Enable verbose logging for debugging (set to false for production)
+verbose = false
+
+# Optimize for development speed
+dev_mode = true
+
+# Enable hot reloading optimizations
+hot_reload = true
+
+# Module resolution cache
+module_cache = true

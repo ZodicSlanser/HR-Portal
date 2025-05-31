@@ -5,19 +5,15 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
-
-  // Webpack configuration
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      // Don't bundle Prisma on the client side
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        "fs": false,
-        "path": false,
-        "crypto": false,
-      };
-    }
-    return config;
+  // Turbopack configuration (stable API)
+  turbopack: {
+    // Optimize module resolution
+    resolveAlias: {
+      '@': './src',
+      '@/components': './src/components',
+      '@/lib': './src/lib',
+      '@/hooks': './src/hooks',
+    },
   },
   
   // Image optimization

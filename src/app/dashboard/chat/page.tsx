@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { prisma } from "@/lib/prisma";
 import { MessageCircle, Users, Briefcase, DollarSign, CheckSquare } from "lucide-react";
 import ChatInterface from "@/components/chat-interface";
-import { Employee } from "@/lib/types/salary-types";
+import type { Employee } from "@/lib/types/salary-types";
 
 interface Project {
   id: string;

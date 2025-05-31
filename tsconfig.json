@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2022",
     "lib": [
       "dom",
       "dom.iterable",
@@ -24,9 +24,22 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@/components/*": [
+        "./src/components/*"
+      ],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@/hooks/*": [
+        "./src/hooks/*"
       ]
     },
-    "strict": false
+    "strict": false,
+    // Turbopack optimizations
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": false,
+    "noUncheckedIndexedAccess": false
   },
   "include": [
     "next-env.d.ts",

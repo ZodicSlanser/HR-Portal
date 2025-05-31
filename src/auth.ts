@@ -45,6 +45,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  session: {
+    strategy: "jwt",
+  },
   callbacks: {
     async session({ session, token }) {
       if (token.sub && session.user) {
@@ -61,13 +64,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   },
   pages: {
     signIn: '/login',
-  },  session: {
-    strategy: "jwt",
   },
-  debug: process.env.NODE_ENV === "development",
+  secret: process.env.NEXTAUTH_SECRET,
   trustHost: true,
-  secret: process.env.NEXTAUTH_SECRET || "development-secret-key",
-  experimental: {
-    enableWebAuthn: false,
-  },
+  debug: process.env.NODE_ENV === "development",
 });

@@ -8,7 +8,7 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import EmployeeForm from "@/components/employee-form";
 import DeleteEmployeeButton from "@/components/delete-employee-button";
 import { format } from "date-fns";
-import {Employee} from "@/lib/types/salary-types";
+import type {Employee} from "@/lib/types/salary-types";
 
 export default async function EmployeesPage() {
   const session = await auth();

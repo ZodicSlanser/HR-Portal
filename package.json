@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate && next build",
+    "dev:debug": "next dev --turbopack",
+    "dev:trace": "TURBOPACK_TRACING=1 next dev --turbopack",
+    "build": "prisma generate --no-engine && next build",
+    "build:turbopack": "prisma generate && next build --turbopack",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
@@ -12,10 +15,14 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "db:check": "node scripts/check-demo-data.js",
-    "vercel-build": "prisma generate && prisma db push && next build",
+    "vercel-build": "prisma generate --no-engine && prisma db push && next build --turbopack",
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "turbo:monitor": "node scripts/turbopack-monitor.js",
+    "turbo:cache": "node scripts/turbopack-monitor.js cache",
+    "turbo:clear": "node scripts/turbopack-monitor.js clear",
+    "turbo:report": "node scripts/turbopack-monitor.js report"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
