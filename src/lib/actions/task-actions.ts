@@ -6,6 +6,10 @@ import { z } from "zod";
 import { getCurrentUserId } from "./shared";
 import { createSuccessResponse, createErrorResponse, type ActionResponse } from "@/lib/types/action-types";
 
+// Type aliases
+type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+type TaskStatus = "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
+
 // Schema validation
 const taskSchema = z.object({
   title: z.string().min(1, "Task title is required"),
@@ -17,15 +21,23 @@ const taskSchema = z.object({
 export async function createTask(formData: FormData): Promise<ActionResponse> {
   try {
     const userId = await getCurrentUserId();
-    
-    const data = {
+      const data = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
-      priority: formData.get("priority") as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
+      priority: formData.get("priority") as TaskPriority,
       projectId: formData.get("projectId") as string,
     };
 
     const validatedData = taskSchema.parse(data);
+    
+    // Extract assigned employees
+    const assignedEmployees: string[] = [];
+    let index = 0;
+    while (formData.has(`assignedEmployees[${index}]`)) {
+      const employeeId = formData.get(`assignedEmployees[${index}]`) as string;
+      if (employeeId) assignedEmployees.push(employeeId);
+      index++;
+    }
     
     // Verify project belongs to user
     const project = await prisma.project.findFirst({
@@ -34,13 +46,33 @@ export async function createTask(formData: FormData): Promise<ActionResponse> {
     
     if (!project) {
       return createErrorResponse("Project not found");
-    }    await prisma.task.create({
+    }
+
+    // Verify all employees belong to the user
+    if (assignedEmployees.length > 0) {
+      const employeeCount = await prisma.employee.count({
+        where: {
+          id: { in: assignedEmployees },
+          userId
+        }
+      });
+      
+      if (employeeCount !== assignedEmployees.length) {
+        return createErrorResponse("One or more employees not found");
+      }
+    }    // Create task with assignments in a transaction
+    await prisma.task.create({
       data: {
         title: validatedData.title,
         description: validatedData.description,
         priority: validatedData.priority,
         projectId: validatedData.projectId,
-        status: "TODO"
+        status: "TODO",
+        assignments: {
+          create: assignedEmployees.map(employeeId => ({
+            employeeId
+          }))
+        }
       },
     });
 
@@ -52,7 +84,7 @@ export async function createTask(formData: FormData): Promise<ActionResponse> {
   }
 }
 
-export async function updateTaskStatus(taskId: string, status: "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE"): Promise<ActionResponse> {
+export async function updateTaskStatus(taskId: string, status: TaskStatus): Promise<ActionResponse> {
   try {
     const userId = await getCurrentUserId();
     
@@ -83,8 +115,8 @@ export async function updateTaskStatus(taskId: string, status: "TODO" | "IN_PROG
 export async function updateTask(taskId: string, updates: {
   title?: string;
   description?: string;
-  priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-  status?: "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
+  priority?: TaskPriority;
+  status?: TaskStatus;
 }): Promise<ActionResponse> {
   try {
     const userId = await getCurrentUserId();
@@ -100,18 +132,20 @@ export async function updateTask(taskId: string, updates: {
     if (!task) {
       return createErrorResponse("Task not found");
     }
-    
-    // Filter out undefined values to only update provided fields
+      // Filter out undefined values to only update provided fields
     const updateData: {
       title?: string;
       description?: string;
-      priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-      status?: "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
+      priority?: TaskPriority;
+      status?: TaskStatus;
     } = {};
+    
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.description !== undefined) updateData.description = updates.description;
     if (updates.priority !== undefined) updateData.priority = updates.priority;
-    if (updates.status !== undefined) updateData.status = updates.status;    await prisma.task.update({
+    if (updates.status !== undefined) updateData.status = updates.status;
+
+    await prisma.task.update({
       where: { id: taskId },
       data: updateData,
     });

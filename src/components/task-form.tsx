@@ -31,13 +31,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { createTask } from "@/lib/actions";
+import { X, UserPlus } from "lucide-react";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Task title is required"),
   description: z.string().optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
   projectId: z.string().min(1, "Project is required"),
+  assignedEmployees: z.array(z.string()).optional(),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
@@ -47,14 +50,22 @@ interface Project {
   name: string;
 }
 
+interface Employee {
+  id: string;
+  name: string;
+  employeeId: string;
+}
+
 interface TaskFormProps {
   children: React.ReactNode;
   projects: Project[];
+  employees?: Employee[];
 }
 
-export default function TaskForm({ children, projects }: TaskFormProps) {
+export default function TaskForm({ children, projects, employees = [] }: Readonly<TaskFormProps>) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -63,9 +74,9 @@ export default function TaskForm({ children, projects }: TaskFormProps) {
       description: "",
       priority: "MEDIUM",
       projectId: "",
+      assignedEmployees: [],
     },
   });
-
   async function onSubmit(data: TaskFormData) {
     setIsLoading(true);
     try {
@@ -74,12 +85,18 @@ export default function TaskForm({ children, projects }: TaskFormProps) {
       formData.append("description", data.description || "");
       formData.append("priority", data.priority);
       formData.append("projectId", data.projectId);
+      
+      // Add selected employees
+      selectedEmployees.forEach((employeeId, index) => {
+        formData.append(`assignedEmployees[${index}]`, employeeId);
+      });
 
       const result = await createTask(formData);
 
       if (result.success) {
         setIsOpen(false);
         form.reset();
+        setSelectedEmployees([]);
       } else {
         console.error(result.error);
       }
@@ -89,6 +106,16 @@ export default function TaskForm({ children, projects }: TaskFormProps) {
       setIsLoading(false);
     }
   }
+
+  const handleEmployeeSelect = (employeeId: string) => {
+    if (!selectedEmployees.includes(employeeId)) {
+      setSelectedEmployees(prev => [...prev, employeeId]);
+    }
+  };
+
+  const handleEmployeeRemove = (employeeId: string) => {
+    setSelectedEmployees(prev => prev.filter(id => id !== employeeId));
+  };
 
   const priorityColors = {
     LOW: "text-blue-600",
@@ -166,9 +193,7 @@ export default function TaskForm({ children, projects }: TaskFormProps) {
                   <FormMessage />
                 </FormItem>
               )}
-            />
-
-            <FormField
+            />            <FormField
               control={form.control}
               name="priority"
               render={({ field }) => (
@@ -194,6 +219,69 @@ export default function TaskForm({ children, projects }: TaskFormProps) {
                 </FormItem>
               )}
             />
+
+            {/* Employee Assignment Section */}
+            {employees.length > 0 && (
+              <div className="space-y-3">                <div className="flex items-center justify-between">
+                  <FormLabel className="text-sm font-medium">Assign Team Members</FormLabel>
+                  <span className="text-xs text-gray-500">
+                    {selectedEmployees.length} selected
+                  </span>
+                </div>
+                
+                {/* Employee Selection Dropdown */}
+                <Select onValueChange={handleEmployeeSelect}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select team members to assign..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {employees
+                      .filter(employee => !selectedEmployees.includes(employee.id))
+                      .map((employee) => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          <div className="flex items-center gap-2">
+                            <UserPlus className="h-4 w-4 text-blue-600" />
+                            <span>{employee.name}</span>
+                            <span className="text-xs text-gray-500">({employee.employeeId})</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Selected Employees */}
+                {selectedEmployees.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-xs font-medium text-gray-700">Selected Team Members:</div>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedEmployees.map((employeeId) => {
+                        const employee = employees.find(e => e.id === employeeId);
+                        if (!employee) return null;
+                        
+                        return (
+                          <Badge 
+                            key={employeeId} 
+                            variant="secondary" 
+                            className="flex items-center gap-1 bg-blue-100 text-blue-800 hover:bg-blue-200"
+                          >
+                            <span>{employee.name}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-4 w-4 p-0 hover:bg-blue-300"
+                              onClick={() => handleEmployeeRemove(employeeId)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <DialogFooter>
               <Button 

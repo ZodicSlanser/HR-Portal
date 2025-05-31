@@ -11,7 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { User, Building2, Flag, Clock, Edit2, Save, X } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { User, Building2, Flag, Clock, Edit2, Save, X, UserPlus, UserMinus, Trash2 } from "lucide-react";
+import { assignTaskToEmployee, removeTaskAssignment, deleteTask } from "@/lib/actions";
+import { toast } from "sonner";
 
 interface Task {
   id: string;
@@ -36,7 +39,12 @@ interface TaskDetailModalProps {
   task: Task | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpdate?: (taskId: string, updates: Partial<Task>) => void;
+  onUpdate?: (taskId: string, updates: Partial<Task & { forceRefresh?: boolean }>) => void;
+  availableEmployees?: Array<{
+    id: string;
+    name: string;
+    employeeId: string;
+  }>;
 }
 
 const priorityColors = {
@@ -60,9 +68,11 @@ const statusLabels = {
   DONE: "Done",
 };
 
-export default function TaskDetailModal({ task, isOpen, onClose, onUpdate }: Readonly<TaskDetailModalProps>) {
+export default function TaskDetailModal({ task, isOpen, onClose, onUpdate, availableEmployees = [] }: Readonly<TaskDetailModalProps>) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTask, setEditedTask] = useState<Partial<Task>>({});
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
 
   if (!task) return null;
 
@@ -83,10 +93,67 @@ export default function TaskDetailModal({ task, isOpen, onClose, onUpdate }: Rea
     setIsEditing(false);
     setEditedTask({});
   };
-
   const handleCancel = () => {
     setIsEditing(false);
     setEditedTask({});
+  };
+  const handleAssignEmployee = async () => {
+    if (!selectedEmployeeId || !task) return;
+    
+    setIsAssigning(true);
+    try {
+      const result = await assignTaskToEmployee(task.id, selectedEmployeeId);      if (result.success) {
+        toast.success("Employee assigned successfully");
+        setSelectedEmployeeId("");
+        // Signal that assignments were updated but don't close modal
+        if (onUpdate) {
+          onUpdate(task.id, { forceRefresh: true });
+        }
+      } else {
+        toast.error(result.error || "Failed to assign employee");
+      }
+    } catch (error) {
+      console.error("Error assigning employee:", error);
+      toast.error("Failed to assign employee");
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const handleRemoveAssignment = async (employeeId: string) => {
+    if (!task) return;
+    
+    try {
+      const result = await removeTaskAssignment(task.id, employeeId);      if (result.success) {
+        toast.success("Employee removed from task");
+        // Signal that assignments were updated but don't close modal
+        if (onUpdate) {
+          onUpdate(task.id, { forceRefresh: true });
+        }
+      } else {
+        toast.error(result.error || "Failed to remove employee");
+      }
+    } catch (error) {
+      console.error("Error removing assignment:", error);
+      toast.error("Failed to remove employee");
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!task) return;
+    
+    try {
+      const result = await deleteTask(task.id);
+      if (result.success) {
+        toast.success("Task deleted successfully");
+        onClose();
+      } else {
+        toast.error(result.error || "Failed to delete task");
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast.error("Failed to delete task");
+    }
   };
 
   const getInitials = (name: string) => {
@@ -120,13 +187,40 @@ export default function TaskDetailModal({ task, isOpen, onClose, onUpdate }: Rea
                 <Building2 className="h-4 w-4" />
                 <span>{task.project.name}</span>
               </DialogDescription>
-            </div>
-            <div className="flex items-center gap-2">
+            </div>            <div className="flex items-center gap-2">
               {!isEditing ? (
-                <Button variant="outline" size="sm" onClick={handleEdit}>
-                  <Edit2 className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" onClick={handleEdit}>
+                    <Edit2 className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Task</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this task? This action cannot be undone.
+                          All task assignments will also be removed.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={handleDeleteTask}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete Task
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
               ) : (
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={handleCancel}>
@@ -220,28 +314,67 @@ export default function TaskDetailModal({ task, isOpen, onClose, onUpdate }: Rea
             )}
           </div>
 
-          <Separator />
-
-          {/* Assigned Team */}
+          <Separator />          {/* Assigned Team */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Assigned Team ({task.assignments.length})
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Assigned Team ({task.assignments.length})
+              </Label>
+              
+              {/* Add Employee Section */}
+              {availableEmployees.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId}>
+                    <SelectTrigger className="w-[180px] h-8">
+                      <SelectValue placeholder="Select employee" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableEmployees
+                        .filter(emp => !task.assignments.some(assignment => assignment.employee.id === emp.id))
+                        .map((employee) => (
+                          <SelectItem key={employee.id} value={employee.id}>
+                            {employee.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    size="sm" 
+                    onClick={handleAssignEmployee}
+                    disabled={!selectedEmployeeId || isAssigning}
+                  >
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    Assign
+                  </Button>
+                </div>
+              )}
+            </div>
+            
             {task.assignments.length > 0 ? (
               <div className="grid gap-2">
                 {task.assignments.map((assignment) => (
                   <Card key={assignment.employee.id} className="p-3">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="text-xs">
-                          {getInitials(assignment.employee.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium">{assignment.employee.name}</p>
-                        <p className="text-xs text-muted-foreground">ID: {assignment.employee.employeeId}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className="text-xs">
+                            {getInitials(assignment.employee.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-sm font-medium">{assignment.employee.name}</p>
+                          <p className="text-xs text-muted-foreground">ID: {assignment.employee.employeeId}</p>
+                        </div>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveAssignment(assignment.employee.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <UserMinus className="h-4 w-4" />
+                      </Button>
                     </div>
                   </Card>
                 ))}

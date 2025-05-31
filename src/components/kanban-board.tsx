@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   DndContext,
   DragOverlay,
@@ -275,11 +276,32 @@ export default function KanbanBoard({ tasks, projects = [], employees = [] }: Re
     IN_REVIEW: false,
     DONE: false
   });
-
-  // Prevent hydration mismatch by only rendering DndContext after mounting
+  
+  const router = useRouter();  // Prevent hydration mismatch by only rendering DndContext after mounting
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Update selectedTask when tasks array changes (after router.refresh())
+  useEffect(() => {
+    if (selectedTask && tasks.length > 0) {
+      const updatedTask = tasks.find(t => t.id === selectedTask.id);
+      if (updatedTask) {
+        setSelectedTask(updatedTask);
+      }
+    }
+  }, [tasks, selectedTask]);
+
+  // Update selectedTask when tasks array changes (after router.refresh)
+  // This ensures the modal shows fresh assignment data after updates
+  useEffect(() => {
+    if (selectedTask && isTaskModalOpen) {
+      const updatedTask = tasks.find(t => t.id === selectedTask.id);
+      if (updatedTask) {
+        setSelectedTask(updatedTask);
+      }
+    }
+  }, [tasks, selectedTask, isTaskModalOpen]);
 
   const handleSortChange = (columnId: TaskStatus, sortOption: SortOption) => {
     setColumnSorts(prev => ({
@@ -306,17 +328,27 @@ export default function KanbanBoard({ tasks, projects = [], employees = [] }: Re
   const handleTaskModalClose = () => {
     setIsTaskModalOpen(false);
     setSelectedTask(null);
-  };  const handleTaskUpdate = async (taskId: string, updates: Partial<Task>) => {
+  };  const handleTaskUpdate = async (taskId: string, updates: Partial<Task & { forceRefresh?: boolean }>) => {
     try {
-      // Use the comprehensive updateTask function to handle all field updates
-      await updateTask(taskId, {
-        title: updates.title,
-        description: updates.description ?? undefined,
-        priority: updates.priority,
-        status: updates.status,
-      });
-      
-      handleTaskModalClose();
+      // Handle regular task field updates (title, description, priority, status)
+      if (updates.title || updates.description !== undefined || updates.priority || updates.status) {
+        await updateTask(taskId, {
+          title: updates.title,
+          description: updates.description ?? undefined,
+          priority: updates.priority,
+          status: updates.status,
+        });
+        handleTaskModalClose();
+      } 
+      // Handle assignment updates - refresh data but keep modal open
+      else if (updates.forceRefresh) {
+        // Refresh the page data to get updated assignments
+        router.refresh();
+        
+        // Note: After router.refresh(), the component will re-render with fresh data
+        // The modal will stay open and display the updated task assignments
+        // because selectedTask state is preserved and the task data will be refreshed
+      }
     } catch (error) {
       console.error("Failed to update task:", error);
     }
@@ -604,9 +636,11 @@ export default function KanbanBoard({ tasks, projects = [], employees = [] }: Re
         <div className="flex items-center gap-2">
           {/* Project Actions */}
           {projects.length > 0 && (
-            <>
-              {employees.length > 0 && (
-                <TaskForm projects={projects.filter(p => selectedProjectId === "all" || p.id === selectedProjectId)}>
+            <>              {employees.length > 0 && (
+                <TaskForm 
+                  projects={projects.filter(p => selectedProjectId === "all" || p.id === selectedProjectId)}
+                  employees={employees}
+                >
                   <Button variant="outline" size="sm">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Task
@@ -681,9 +715,7 @@ export default function KanbanBoard({ tasks, projects = [], employees = [] }: Re
               onTaskClick={handleTaskClick}
             />
           ))}
-        </div>
-
-        <DragOverlay>
+        </div>        <DragOverlay>
           {activeTask ? <TaskCard task={activeTask} isDragging viewMode={viewMode} /> : null}
         </DragOverlay>
       </DndContext>
@@ -694,6 +726,7 @@ export default function KanbanBoard({ tasks, projects = [], employees = [] }: Re
         isOpen={isTaskModalOpen}
         onClose={handleTaskModalClose}
         onUpdate={handleTaskUpdate}
+        availableEmployees={employees}
       />
     </div>
   );
